@@ -1,35 +1,58 @@
 # Distributed SMS Spam Intelligence
 
-A portfolio-grade distributed data analytics project that turns a class lab idea into a production-style workflow.
+An end-to-end Spark project for SMS spam detection, built as a notebook-first workflow in Google Colab.
 
-## Project Goal
-Build a scalable SMS spam detection system with Apache Spark and PySpark, then package it as a reproducible and recruiter-friendly project.
+## Project Scope
+- Distributed data processing with PySpark.
+- Data cleaning and EDA on the SMS Spam Collection dataset.
+- TF-IDF feature engineering with a Logistic Regression classifier.
+- Model save/load and inference on new messages.
 
-## Why This Project Is Portfolio-Ready
-- Distributed processing with Spark for realistic data pipelines.
-- End-to-end workflow from raw data to model inference.
-- Reproducible notebooks designed for Google Colab.
-- Modular structure so this can evolve into API serving and MLOps workflows.
-
-## Planned Notebook Roadmap
+## Notebooks
 1. `notebooks/01_data_quality_and_distributed_eda.ipynb`
-   - Data ingestion, cleaning, quality checks, and distributed EDA.
-2. `notebooks/02_modeling_pipeline_and_evaluation.ipynb`
-   - Feature engineering, training, evaluation, and artifact export.
-3. `notebooks/03_inference_playground_and_error_analysis.ipynb`
-   - Batch inference, confidence inspection, and error analysis.
+   - Download dataset with `kagglehub`.
+   - Clean labels/messages.
+   - Class distribution and message length analysis.
+   - Export artifacts to `/content/artifacts`.
+2. `notebooks/02_modeling_pipeline.ipynb`
+   - Load cleaned parquet artifacts.
+   - Build Spark ML pipeline (Tokenizer -> StopWordsRemover -> HashingTF -> IDF -> LogisticRegression).
+   - Evaluate and export metrics.
+   - Save/reload model and run inference samples.
+3. `notebooks/03_inference_and_error_analysis.ipynb`
+   - Load saved model and run full-dataset scoring.
+   - Inspect uncertain predictions.
+   - Export false positives and false negatives for manual review.
 
 ## Dataset
-Use the SMS Spam Collection dataset from Kaggle.
+Kaggle: SMS Spam Collection Dataset (`uciml/sms-spam-collection-dataset`).
 
-Raw data should not be committed. Place it in:
-- `data/raw/spam.csv` or
-- `data/raw/SMSSpamCollection`
+The notebook downloads the data directly using `kagglehub`, so no manual CSV placement is required in Colab.
 
-## Execution Strategy
-Primary environment: Google Colab.
+## Reproducing Results (Colab)
+1. Open notebook 1 and run all cells.
+2. Open notebook 2 and run all cells.
+3. Ensure both notebooks use the same runtime so notebook 2 can read artifacts from `/content/artifacts`.
 
-This repo is written to run notebook-first in Colab. When running locally, make sure Spark and required packages are already available.
+## Latest Modeling Results
+From `notebooks/02_modeling_pipeline.ipynb` on test split (seed=42):
 
-## Commit Strategy
-Work in incremental commits with clear milestones. Keep each commit focused on one project stage (scaffold, EDA, modeling, inference, docs, polish).
+| Metric | Value |
+|---|---:|
+| Accuracy | 0.9748 |
+| Precision | 0.9353 |
+| Recall | 0.8784 |
+| F1-score | 0.9059 |
+
+Confusion counts:
+- TP: 130
+- TN: 914
+- FP: 9
+- FN: 18
+
+## Artifacts
+- Clean dataset parquet: `/content/artifacts/clean_sms.parquet`
+- Saved model: `/content/artifacts/models/sms_spam_pipeline`
+- Metrics CSV: `/content/artifacts/model_metrics.csv`
+- False positives CSV: `/content/artifacts/false_positives.csv`
+- False negatives CSV: `/content/artifacts/false_negatives.csv`
