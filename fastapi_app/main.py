@@ -1,45 +1,29 @@
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 from .predictor import SpamPredictor
 from .schemas import PredictItem, PredictRequest, PredictResponse
 
 
-def resolve_model_path() -> str:
-    configured = os.getenv("MODEL_PATH")
-    if configured:
-        return configured
+APP_DIR = Path(__file__).resolve().parent
+DEFAULT_MODEL_PATH = str(APP_DIR / "models" / "sms_spam_pipeline")
 
-    candidates = [
-        Path("artifacts/models/sms_spam_best_pipeline"),
-        Path("models/sms_spam_best_pipeline"),
-        Path("/content/artifacts/models/sms_spam_best_pipeline"),
-    ]
-
-    for candidate in candidates:
-        if candidate.exists():
-            return str(candidate)
-
-    # Default to the local project artifact path when not explicitly set.
-    return str(candidates[0])
-
-
-MODEL_PATH = resolve_model_path()
+load_dotenv()
+MODEL_PATH = os.getenv("MODEL_PATH", DEFAULT_MODEL_PATH)
 
 predictor = SpamPredictor(model_path=MODEL_PATH)
 startup_error: str | None = None
-
-app = FastAPI(
-    title="SMS Spam Detection API",
-    description="FastAPI service for SMS spam prediction using a Spark PipelineModel.",
-    version="0.1.0",
-)
+templates = Jinja2Templates(directory=str(APP_DIR / "templates"))
 
 
-@app.on_event("startup")
-def startup_event() -> None:
+@asynccontextmanager
+async def lifespan(_: FastAPI):
     global startup_error
     try:
         predictor.load()
@@ -47,6 +31,24 @@ def startup_event() -> None:
     except Exception as exc:
         # Keep API alive so /health can report misconfiguration.
         startup_error = str(exc)
+    yield
+
+
+app = FastAPI(
+    title="SMS Spam Detection API",
+    description="FastAPI service for SMS spam prediction using a Spark PipelineModel.",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"startup_error": startup_error},
+    )
 
 
 @app.get("/health")
@@ -61,23 +63,22 @@ def health() -> dict[str, object]:
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(payload: PredictRequest) -> PredictResponse:
-    if not payload.messages:
-        raise HTTPException(status_code=400, detail="messages list must not be empty")
+    message = payload.message.strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="message must not be empty")
 
     try:
         if predictor.model is None:
             predictor.load()
 
-        raw_predictions = predictor.predict(payload.messages)
+        raw_predictions = predictor.predict([message])
+        if not raw_predictions:
+            raise RuntimeError("no prediction returned")
     except Exception as exc:
         raise HTTPException(
             status_code=500, detail=f"Prediction failed: {exc}"
         ) from exc
 
-    prediction_items = [PredictItem(**item) for item in raw_predictions]
+    prediction_item = PredictItem(**raw_predictions[0])
 
-    return PredictResponse(
-        model_path=predictor.model_path,
-        count=len(prediction_items),
-        predictions=prediction_items,
-    )
+    return PredictResponse(prediction=prediction_item)

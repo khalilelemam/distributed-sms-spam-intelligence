@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class PredictRequest(BaseModel):
-    messages: list[str] = Field(..., min_length=1)
+    message: str = Field(..., min_length=1)
 
 
 class PredictItem(BaseModel):
@@ -13,6 +13,4 @@ class PredictItem(BaseModel):
 
 
 class PredictResponse(BaseModel):
-    model_path: str
-    count: int
-    predictions: list[PredictItem]
+    prediction: PredictItem
