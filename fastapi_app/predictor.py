@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import os
+import sys
 from pathlib import Path
+
+os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
+os.environ.setdefault("PYSPARK_DRIVER_PYTHON", sys.executable)
 
 from pyspark.ml import PipelineModel
 from pyspark.ml.functions import vector_to_array
@@ -15,9 +20,15 @@ class SpamPredictor:
 
     def load(self) -> None:
         if self.spark is None:
+            python_exec = os.getenv("PYSPARK_PYTHON", sys.executable)
+            driver_exec = os.getenv("PYSPARK_DRIVER_PYTHON", python_exec)
             self.spark = (
                 SparkSession.builder.appName("sms-spam-fastapi")
                 .master("local[*]")
+                .config("spark.pyspark.python", python_exec)
+                .config("spark.pyspark.driver.python", driver_exec)
+                .config("spark.executorEnv.PYSPARK_PYTHON", python_exec)
+                .config("spark.executorEnv.PYSPARK_DRIVER_PYTHON", driver_exec)
                 .getOrCreate()
             )
             self.spark.sparkContext.setLogLevel("WARN")
@@ -44,8 +55,12 @@ class SpamPredictor:
         assert self.spark is not None
         assert self.model is not None
 
-        input_rows = [(idx, msg) for idx, msg in enumerate(messages)]
-        input_df = self.spark.createDataFrame(input_rows, ["row_id", "message"])
+        values_clause = ", ".join(
+            f"({idx}, {self._sql_quote(msg)})" for idx, msg in enumerate(messages)
+        )
+        input_df = self.spark.sql(
+            f"SELECT * FROM VALUES {values_clause} AS t(row_id, message)"
+        )
 
         scored_df = self.model.transform(input_df)
 
@@ -86,3 +101,8 @@ class SpamPredictor:
             )
 
         return predictions
+
+    @staticmethod
+    def _sql_quote(value: str) -> str:
+        escaped = value.replace("\\", "\\\\").replace("'", "''")
+        return f"'{escaped}'"
