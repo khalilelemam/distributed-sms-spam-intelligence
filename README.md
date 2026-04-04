@@ -19,8 +19,8 @@ An end-to-end Spark project for SMS spam detection, built as a notebook-first wo
    - Load cleaned parquet artifacts.
    - Build Spark ML pipeline (Tokenizer -> StopWordsRemover -> HashingTF -> IDF -> classifier).
    - Split data into train, validation, and test.
-   - Tune Logistic Regression on validation.
-   - Compare tuned Logistic Regression vs LinearSVC vs NaiveBayes on test.
+   - Tune Logistic Regression, LinearSVC, and NaiveBayes using `ParamGridBuilder` + `TrainValidationSplit`.
+   - Compare tuned models on held-out test split.
    - Evaluate and export metrics/comparison tables.
    - Save/reload model and run inference samples.
 3. `notebooks/03_inference_and_error_analysis.ipynb`
@@ -41,33 +41,82 @@ The notebook downloads the data directly using `kagglehub`, so no manual CSV pla
 ## Latest Modeling Results
 From `notebooks/02_modeling_pipeline.ipynb` using train/validation/test split (seed=42):
 
-Tuned Logistic Regression on final test split:
+Selected final model: `LinearSVC_tuned`
+
+Best model metrics on final test split:
 
 | Metric | Value |
 |---|---:|
-| Accuracy | 0.9715 |
-| Precision | 0.9009 |
-| Recall | 0.8929 |
-| F1-score | 0.8969 |
+| Accuracy | 0.9777 |
+| Precision | 0.9352 |
+| Recall | 0.9018 |
+| F1-score | 0.9182 |
 
 Confusion counts:
-- TP: 100
-- TN: 683
-- FP: 11
-- FN: 12
+- TP: 101
+- TN: 687
+- FP: 7
+- FN: 11
 
 Model comparison (test split):
 
 | Model | Accuracy | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|
-| LinearSVC | 0.9789 | 0.9524 | 0.8929 | 0.9217 |
+| LinearSVC (tuned) | 0.9777 | 0.9352 | 0.9018 | 0.9182 |
 | LogisticRegression (tuned) | 0.9715 | 0.9009 | 0.8929 | 0.8969 |
-| NaiveBayes | 0.9553 | 0.7836 | 0.9375 | 0.8537 |
+| NaiveBayes (tuned) | 0.9653 | 0.8333 | 0.9375 | 0.8824 |
+
+## FastAPI Inference Service
+
+This repo now includes a FastAPI app that loads the best saved Spark pipeline model.
+
+Files:
+- `fastapi_app/main.py`
+- `fastapi_app/predictor.py`
+- `fastapi_app/schemas.py`
+- `requirements-api.txt`
+
+Install dependencies:
+
+```bash
+py -3 -m venv .venv-fastapi
+.\\.venv-fastapi\\Scripts\\Activate.ps1
+pip install -r requirements-api.txt
+```
+
+Set the model path (optional if using default artifact location):
+
+```bash
+# PowerShell
+$env:MODEL_PATH="artifacts/models/sms_spam_best_pipeline"
+
+# Bash
+export MODEL_PATH=artifacts/models/sms_spam_best_pipeline
+
+# Colab variant (if serving directly from Colab runtime)
+export MODEL_PATH=/content/artifacts/models/sms_spam_best_pipeline
+```
+
+Run the API:
+
+```bash
+uvicorn fastapi_app.main:app --host 0.0.0.0 --port 8000
+```
+
+Example request:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/predict" \
+   -H "Content-Type: application/json" \
+   -d '{"messages": ["Win a free prize now", "Let us meet at 5 pm"]}'
+```
 
 ## Artifacts
 - Clean dataset parquet: `/content/artifacts/clean_sms.parquet`
-- Saved model: `/content/artifacts/models/sms_spam_pipeline`
+- Best saved model: `/content/artifacts/models/sms_spam_best_pipeline`
+- Legacy logistic model: `/content/artifacts/models/sms_spam_pipeline`
 - Metrics CSV: `/content/artifacts/model_metrics.csv`
 - Model comparison CSV: `/content/artifacts/model_comparison.csv`
+- Best model metrics CSV: `/content/artifacts/best_model_metrics.csv`
 - False positives CSV: `/content/artifacts/false_positives.csv`
 - False negatives CSV: `/content/artifacts/false_negatives.csv`

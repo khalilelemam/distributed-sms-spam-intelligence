@@ -7,12 +7,14 @@ https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset
 
 Download snippet used in the notebooks:
 
+```python
 import kagglehub
 
 # Download latest version
 path = kagglehub.dataset_download("uciml/sms-spam-collection-dataset")
 
 print("Path to dataset files:", path)
+```
 
 Notes:
 - You do not need to manually place raw files in this folder when running in Colab.
