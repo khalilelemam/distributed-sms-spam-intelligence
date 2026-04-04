@@ -1,10 +1,19 @@
 # Raw Data Folder
 
-Put the original SMS dataset file here when running locally.
+This project runs in Colab and downloads data directly from Kaggle using kagglehub.
 
-Accepted filenames:
-- `spam.csv`
-- `SMSSpamCollection`
+Dataset link:
+https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset
 
-Recommended source: Kaggle SMS Spam Collection Dataset.
-Do not commit raw dataset files to Git.
+Download snippet used in the notebooks:
+
+import kagglehub
+
+# Download latest version
+path = kagglehub.dataset_download("uciml/sms-spam-collection-dataset")
+
+print("Path to dataset files:", path)
+
+Notes:
+- You do not need to manually place raw files in this folder when running in Colab.
+- If you run locally, keep raw data out of Git history.

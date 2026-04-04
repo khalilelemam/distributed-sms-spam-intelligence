@@ -5,7 +5,8 @@ An end-to-end Spark project for SMS spam detection, built as a notebook-first wo
 ## Project Scope
 - Distributed data processing with PySpark.
 - Data cleaning and EDA on the SMS Spam Collection dataset.
-- TF-IDF feature engineering with a Logistic Regression classifier.
+- TF-IDF feature engineering with multiple Spark classifiers.
+- Validation-based hyperparameter tuning and model comparison.
 - Model save/load and inference on new messages.
 
 ## Notebooks
@@ -16,8 +17,11 @@ An end-to-end Spark project for SMS spam detection, built as a notebook-first wo
    - Export artifacts to `/content/artifacts`.
 2. `notebooks/02_modeling_pipeline.ipynb`
    - Load cleaned parquet artifacts.
-   - Build Spark ML pipeline (Tokenizer -> StopWordsRemover -> HashingTF -> IDF -> LogisticRegression).
-   - Evaluate and export metrics.
+   - Build Spark ML pipeline (Tokenizer -> StopWordsRemover -> HashingTF -> IDF -> classifier).
+   - Split data into train, validation, and test.
+   - Tune Logistic Regression on validation.
+   - Compare tuned Logistic Regression vs LinearSVC vs NaiveBayes on test.
+   - Evaluate and export metrics/comparison tables.
    - Save/reload model and run inference samples.
 3. `notebooks/03_inference_and_error_analysis.ipynb`
    - Load saved model and run full-dataset scoring.
@@ -35,24 +39,35 @@ The notebook downloads the data directly using `kagglehub`, so no manual CSV pla
 3. Ensure both notebooks use the same runtime so notebook 2 can read artifacts from `/content/artifacts`.
 
 ## Latest Modeling Results
-From `notebooks/02_modeling_pipeline.ipynb` on test split (seed=42):
+From `notebooks/02_modeling_pipeline.ipynb` using train/validation/test split (seed=42):
+
+Tuned Logistic Regression on final test split:
 
 | Metric | Value |
 |---|---:|
-| Accuracy | 0.9748 |
-| Precision | 0.9353 |
-| Recall | 0.8784 |
-| F1-score | 0.9059 |
+| Accuracy | 0.9715 |
+| Precision | 0.9009 |
+| Recall | 0.8929 |
+| F1-score | 0.8969 |
 
 Confusion counts:
-- TP: 130
-- TN: 914
-- FP: 9
-- FN: 18
+- TP: 100
+- TN: 683
+- FP: 11
+- FN: 12
+
+Model comparison (test split):
+
+| Model | Accuracy | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|
+| LinearSVC | 0.9789 | 0.9524 | 0.8929 | 0.9217 |
+| LogisticRegression (tuned) | 0.9715 | 0.9009 | 0.8929 | 0.8969 |
+| NaiveBayes | 0.9553 | 0.7836 | 0.9375 | 0.8537 |
 
 ## Artifacts
 - Clean dataset parquet: `/content/artifacts/clean_sms.parquet`
 - Saved model: `/content/artifacts/models/sms_spam_pipeline`
 - Metrics CSV: `/content/artifacts/model_metrics.csv`
+- Model comparison CSV: `/content/artifacts/model_comparison.csv`
 - False positives CSV: `/content/artifacts/false_positives.csv`
 - False negatives CSV: `/content/artifacts/false_negatives.csv`
