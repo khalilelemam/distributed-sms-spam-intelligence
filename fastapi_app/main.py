@@ -12,7 +12,7 @@ from .schemas import PredictItem, PredictRequest, PredictResponse
 
 
 APP_DIR = Path(__file__).resolve().parent
-DEFAULT_MODEL_PATH = str(APP_DIR / "models" / "sms_spam_pipeline")
+DEFAULT_MODEL_PATH = str(APP_DIR / "models" / "sms_spam_best_pipeline")
 
 load_dotenv()
 MODEL_PATH = os.getenv("MODEL_PATH", DEFAULT_MODEL_PATH)
