@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SMS Spam Detection Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #37F712;
+      --secondary: #00A6F4;
+      --danger: #FF2157;
+      --surface: #0e1410;
+      --surface-2: #121b15;
+      --line: #1f3525;
+      --text: #e7e5e4;
+      --muted: #9ca3af;
+      --ok: #00A63D;
+      --warn: #FE9900;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(55,247,18,0.15) 0, rgba(55,247,18,0) 35%),
+        radial-gradient(circle at 85% 15%, rgba(0,166,244,0.16) 0, rgba(0,166,244,0) 30%),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(55,247,18,0.035) 0px,
+          rgba(55,247,18,0.035) 1px,
+          transparent 1px,
+          transparent 24px
+        ),
+        #060a08;
+      padding: 24px;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      box-shadow: 0 0 0 1px rgba(55,247,18,0.08), 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .topbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--line);
+    }
+
+    .dot:first-child { background: var(--danger); }
+    .dot:nth-child(2) { background: var(--warn); }
+    .dot:nth-child(3) { background: var(--ok); }
+
+    .content {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.6vw, 2rem);
+      letter-spacing: 0.04em;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      background: #090d0a;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      line-height: 1.45;
+      padding: 12px;
+    }
+
+    textarea:focus {
+      outline: 2px solid var(--secondary);
+      outline-offset: 1px;
+      border-color: var(--secondary);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: #051106;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      padding: 10px 14px;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    button:hover { filter: brightness(0.92); }
+    button:focus-visible {
+      outline: 2px solid var(--secondary);
+      outline-offset: 2px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      overflow: hidden;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 10px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #111a14;
+      color: var(--secondary);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    .score {
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--line);
+      padding: 2px 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pill.spam {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .pill.ham {
+      border-color: var(--ok);
+      color: var(--ok);
+    }
+
+    .error {
+      border: 1px solid var(--danger);
+      color: #ffd2dd;
+      background: rgba(255, 33, 87, 0.08);
+      padding: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .result-card {
+      border: 1px solid var(--line);
+      background: #0b110d;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .result-row {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+
+    .result-key {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 11px;
+    }
+
+    @media (max-width: 740px) {
+      body { padding: 12px; }
+      .content { padding: 14px; }
+      th, td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span>sms-spam-console</span>
+    </div>
+    <section class="content">
+      <h1>SMS Spam Detection Console</h1>
+      <p class="sub">Type one message and run a single prediction.</p>
+
+      {% if startup_error %}
+      <div class="error">Startup issue: {{ startup_error }}</div>
+      {% endif %}
+
+      <textarea id="message" placeholder="Type one SMS message here..."></textarea>
+
+      <div class="actions">
+        <button id="predict-btn" type="button">Run Prediction</button>
+        <span class="hint">API endpoint: /predict</span>
+      </div>
+
+      <div id="result"></div>
+    </section>
+  </main>
+
+  <script>
+    const textarea = document.getElementById('message');
+    const button = document.getElementById('predict-btn');
+    const result = document.getElementById('result');
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderResult(prediction) {
+      if (!prediction) {
+        result.innerHTML = '<div class="hint">No prediction returned.</div>';
+        return;
+      }
+
+      const labelClass = prediction.label === 'spam' ? 'spam' : 'ham';
+      result.innerHTML = `
+        <div class="result-card">
+          <div class="result-row">
+            <span class="result-key">Label</span>
+            <span class="pill ${labelClass}">${escapeHtml(prediction.label)}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-key">Spam Score</span>
+            <span class="score">${Number(prediction.spam_score).toFixed(6)}</span>
+          </div>
+          <div class="result-row">
+            <span class="result-key">Message</span>
+            <span>${escapeHtml(prediction.message)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    async function runPrediction() {
+      const message = textarea.value.trim();
+
+      if (!message) {
+        result.innerHTML = '<div class="error">Please enter a message.</div>';
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Running...';
+      result.innerHTML = '<div class="hint">Scoring messages...</div>';
+
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({message})
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok) {
+          const detail = payload.detail || 'Prediction request failed';
+          result.innerHTML = `<div class="error">${escapeHtml(String(detail))}</div>`;
+          return;
+        }
+
+        renderResult(payload.prediction);
+      } catch (error) {
+        result.innerHTML = `<div class="error">${escapeHtml(String(error))}</div>`;
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Run Prediction';
+      }
+    }
+
+    button.addEventListener('click', runPrediction);
+  </script>
+</body>
+</html>

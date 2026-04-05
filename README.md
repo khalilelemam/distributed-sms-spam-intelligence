@@ -68,7 +68,7 @@ Model comparison (test split):
 
 ## FastAPI Inference Service
 
-This repo now includes a FastAPI app that loads the best saved Spark pipeline model.
+This repo now includes a FastAPI app that loads a local saved Spark pipeline model.
 
 Files:
 - `fastapi_app/main.py`
@@ -84,14 +84,14 @@ py -3 -m venv .venv-fastapi
 pip install -r requirements-api.txt
 ```
 
-Set the model path (optional if using default artifact location):
+Set the model path (optional, the local default is `fastapi_app/models/sms_spam_pipeline`):
 
 ```bash
 # PowerShell
-$env:MODEL_PATH="artifacts/models/sms_spam_best_pipeline"
+$env:MODEL_PATH="fastapi_app/models/sms_spam_pipeline"
 
 # Bash
-export MODEL_PATH=artifacts/models/sms_spam_best_pipeline
+export MODEL_PATH=fastapi_app/models/sms_spam_pipeline
 
 # Colab variant (if serving directly from Colab runtime)
 export MODEL_PATH=/content/artifacts/models/sms_spam_best_pipeline
@@ -103,12 +103,22 @@ Run the API:
 uvicorn fastapi_app.main:app --host 0.0.0.0 --port 8000
 ```
 
+Important:
+- The API needs a local Spark PipelineModel directory.
+- If you trained in Colab, export or download the model folder to your machine and set MODEL_PATH to that local folder.
+
 Example request:
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/predict" \
    -H "Content-Type: application/json" \
-   -d '{"messages": ["Win a free prize now", "Let us meet at 5 pm"]}'
+   -d '{"message": "Win a free prize now"}'
+```
+
+HTTPie example:
+
+```bash
+http POST http://127.0.0.1:8000/predict message="Win a free prize now"
 ```
 
 ## Artifacts
