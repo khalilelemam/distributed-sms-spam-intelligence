@@ -23,15 +23,26 @@ An end-to-end Spark project for SMS spam detection, built as a notebook-first wo
    - Compare tuned models on held-out test split.
    - Evaluate and export metrics/comparison tables.
    - Save/reload model and run inference samples.
+   - Zip and download the `/content/artifacts/models` folder for local API use.
 3. `notebooks/03_inference_and_error_analysis.ipynb`
    - Load saved model and run full-dataset scoring.
    - Inspect uncertain predictions.
    - Export false positives and false negatives for manual review.
 
+## EDA Snapshot
+
+Message-length distribution generated in notebook 1:
+
+![SMS message length analysis](msg-length.png)
+
 ## Dataset
 Kaggle: SMS Spam Collection Dataset (`uciml/sms-spam-collection-dataset`).
 
 The notebook downloads the data directly using `kagglehub`, so no manual CSV placement is required in Colab.
+
+Notes:
+- You do not need a local `data/` folder when running in Colab.
+- If you run locally, keep raw dataset files out of Git history.
 
 ## Reproducing Results (Colab)
 1. Open notebook 1 and run all cells.
@@ -84,14 +95,14 @@ py -3 -m venv .venv-fastapi
 pip install -r requirements-api.txt
 ```
 
-Set the model path (optional, the local default is `fastapi_app/models/sms_spam_pipeline`):
+Set the model path (optional, the local default is `fastapi_app/models/sms_spam_best_pipeline`):
 
 ```bash
 # PowerShell
-$env:MODEL_PATH="fastapi_app/models/sms_spam_pipeline"
+$env:MODEL_PATH="fastapi_app/models/sms_spam_best_pipeline"
 
 # Bash
-export MODEL_PATH=fastapi_app/models/sms_spam_pipeline
+export MODEL_PATH=fastapi_app/models/sms_spam_best_pipeline
 
 # Colab variant (if serving directly from Colab runtime)
 export MODEL_PATH=/content/artifacts/models/sms_spam_best_pipeline
