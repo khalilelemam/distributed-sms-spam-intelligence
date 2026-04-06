@@ -111,7 +111,7 @@ export MODEL_PATH=/content/artifacts/models/sms_spam_best_pipeline
 Run the API:
 
 ```bash
-uvicorn fastapi_app.main:app --host 0.0.0.0 --port 8000
+uvicorn main:app --app-dir fastapi_app --host 0.0.0.0 --port 8000
 ```
 
 Important:
