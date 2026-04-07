@@ -1,8 +1,11 @@
 {
   "$schema": "https://schema.railpack.com",
   "packages": {
-    "python": "3.11",
-    "jdk": "11"
+    "python": "3.11"
+  },
+  "variables": {
+    "RAILPACK_BUILD_APT_PACKAGES": "default-jdk",
+    "RAILPACK_DEPLOY_APT_PACKAGES": "default-jre-headless"
   },
   "steps": {
     "install": {
