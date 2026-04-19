@@ -94,7 +94,7 @@ Install dependencies:
 ```bash
 py -3 -m venv .venv-fastapi
 .\\.venv-fastapi\\Scripts\\Activate.ps1
-pip install -r requirements-api.txt
+pip install -r fastapi_app/requirements.txt
 ```
 
 Set the model path (optional, the local default is `fastapi_app/models/sms_spam_best_pipeline`):
