@@ -1,10 +1,10 @@
 {
+  "$schema": "https://schema.railpack.com",
+  "provider": "python",
   "build": {
-    "builder": "python",
-    "apt_packages": ["default-jdk"],
-    "install_command": "pip install -r fastapi_app/requirements.txt"
+    "apt_packages": ["default-jdk"]
   },
-  "run": {
-    "command": "uvicorn fastapi_app.main:app --host 0.0.0.0 --port ${PORT:-8080}"
+  "deploy": {
+    "start_command": "uvicorn fastapi_app.main:app --host 0.0.0.0 --port ${PORT:-8080}"
   }
 }
