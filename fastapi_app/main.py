@@ -1,10 +1,12 @@
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
+import traceback
+import sys
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from .predictor import SpamPredictor
@@ -39,6 +41,17 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # This prints the REAL error to your terminal logs
+    print(f"ERROR: {exc}", file=sys.stderr)
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal Server Error", "details": str(exc)},
+    )
 
 
 @app.get("/", response_class=HTMLResponse)
