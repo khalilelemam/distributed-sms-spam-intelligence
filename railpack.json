@@ -2,9 +2,10 @@
   "$schema": "https://schema.railpack.com",
   "provider": "python",
   "build": {
-    "apt_packages": ["default-jdk"]
+    "aptPackages": ["default-jdk"]
   },
   "deploy": {
-    "start_command": "uvicorn fastapi_app.main:app --host 0.0.0.0 --port ${PORT:-8080}"
+    "startCommand": "uvicorn fastapi_app.main:app --host 0.0.0.0 --port ${PORT:-8080}",
+    "aptPackages": ["default-jre-headless"]
   }
 }
