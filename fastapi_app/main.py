@@ -7,8 +7,8 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from predictor import SpamPredictor
-from schemas import PredictItem, PredictRequest, PredictResponse
+from .predictor import SpamPredictor
+from .schemas import PredictItem, PredictRequest, PredictResponse
 
 APP_DIR = Path(__file__).resolve().parent
 DEFAULT_MODEL_PATH = str(APP_DIR / "models" / "sms_spam_best_pipeline")
