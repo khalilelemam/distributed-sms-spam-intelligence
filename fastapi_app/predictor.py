@@ -6,6 +6,8 @@ from pathlib import Path
 
 os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
 os.environ.setdefault("PYSPARK_DRIVER_PYTHON", sys.executable)
+# Force Spark's Py4J bridge to bind to the explicit local IPv4 address
+os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
 
 from pyspark.ml import PipelineModel
 from pyspark.ml.functions import vector_to_array
