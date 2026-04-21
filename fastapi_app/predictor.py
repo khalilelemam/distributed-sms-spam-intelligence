@@ -4,14 +4,15 @@ import os
 import sys
 from pathlib import Path
 
+from pyspark.ml import PipelineModel
+from pyspark.ml.functions import vector_to_array
+from pyspark.sql import SparkSession, functions as F
+
 os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
 os.environ.setdefault("PYSPARK_DRIVER_PYTHON", sys.executable)
 # Force Spark's Py4J bridge to bind to the explicit local IPv4 address
 os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
-
-from pyspark.ml import PipelineModel
-from pyspark.ml.functions import vector_to_array
-from pyspark.sql import SparkSession, functions as F
+SPARK_LOG_LEVEL = os.getenv("SPARK_LOG_LEVEL", "WARN").strip().upper() or "WARN"
 
 
 class SpamPredictor:
@@ -33,7 +34,7 @@ class SpamPredictor:
                 .config("spark.executorEnv.PYSPARK_DRIVER_PYTHON", driver_exec)
                 .getOrCreate()
             )
-            self.spark.sparkContext.setLogLevel("WARN")
+            self.spark.sparkContext.setLogLevel(SPARK_LOG_LEVEL)
 
         if self.model is None:
             model_dir = Path(self.model_path).expanduser()
