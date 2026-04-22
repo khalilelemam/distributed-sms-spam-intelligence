@@ -35,8 +35,16 @@ Message-length distribution generated in notebook 1:
 
 ![SMS message length analysis](msg-length.png)
 
+## Local UI Preview
+
+The FastAPI app includes a simple web UI (Jinja template) at the root route (`/`) for single-message testing.
+
+![Localhost app UI](app-ui-localhost.png)
+
 ## Dataset
 Kaggle: SMS Spam Collection Dataset (`uciml/sms-spam-collection-dataset`).
+
+Direct link: https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset
 
 The notebook downloads the data directly using `kagglehub`, so no manual CSV placement is required in Colab.
 
@@ -81,12 +89,6 @@ Model comparison (test split):
 
 This repo now includes a FastAPI app that loads a local saved Spark pipeline model.
 
-Files:
-- `fastapi_app/main.py`
-- `fastapi_app/predictor.py`
-- `fastapi_app/schemas.py`
-- `requirements-api.txt`
-
 Install dependencies:
 
 ```bash
@@ -111,8 +113,10 @@ export MODEL_PATH=/content/artifacts/models/sms_spam_best_pipeline
 Run the API:
 
 ```bash
-uvicorn main:app --app-dir fastapi_app --host 0.0.0.0 --port 8000
+uvicorn fastapi_app.main:app --host 0.0.0.0 --port 8000
 ```
+
+Open the UI at `http://127.0.0.1:8000/`.
 
 Important:
 - The API needs a local Spark PipelineModel directory.
@@ -131,13 +135,3 @@ HTTPie example:
 ```bash
 http POST http://127.0.0.1:8000/predict message="Win a free prize now"
 ```
-
-## Artifacts
-- Clean dataset parquet: `/content/artifacts/clean_sms.parquet`
-- Best saved model: `/content/artifacts/models/sms_spam_best_pipeline`
-- Legacy logistic model: `/content/artifacts/models/sms_spam_pipeline`
-- Metrics CSV: `/content/artifacts/model_metrics.csv`
-- Model comparison CSV: `/content/artifacts/model_comparison.csv`
-- Best model metrics CSV: `/content/artifacts/best_model_metrics.csv`
-- False positives CSV: `/content/artifacts/false_positives.csv`
-- False negatives CSV: `/content/artifacts/false_negatives.csv`
